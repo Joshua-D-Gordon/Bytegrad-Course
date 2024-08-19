@@ -2,6 +2,7 @@
 const MAX_CHARS = 150;
 const textareaEL = document.querySelector('.form__textarea');
 const feedbackListEL = document.querySelector('.feedbacks');
+const hashtagListEL = document.querySelector('.hashtags');
 const spinnerEL = document.querySelector('.spinner');
 const BASE_API_URL = 'https://bytegrad.com/course-assets/js/1/api/feedbacks';
 
@@ -123,6 +124,38 @@ const submitHandler = event => {
 
 formEL.addEventListener('submit', submitHandler);
 
+//Expand feedback
+const clickHandler = (event) =>{
+    //get clicked HTML element
+    clickEL = event.target;
+    //determine upvote intension
+    const upvoteIntention = clickEL.className.includes('upvote');
+
+    //run the appropriate logic
+    if(upvoteIntention){
+        //get closets upclose button
+        const upvoteBtnEL = clickEL.closest('.upvote');
+
+        //disable upvote button (prevent double-click, spam)
+        upvoteBtnEL.disabled = true;
+
+        // select upvote count within the upvote button
+        const upvoteCountEL = upvoteBtnEL.querySelector('.upvote__count');
+
+        // get current displayed upvote count
+        let upvoteCount = +upvoteCountEL.textContent;
+
+        //assgin new value
+        upvoteCountEL.textContent = ++upvoteCount;
+
+    }else{
+        //expand clicked item
+        clickEL.closest('.feedback').classList.toggle('feedback--expand');
+    }
+};
+
+feedbackListEL.addEventListener('click',clickHandler);
+
 // -- FETCH List COMPONENT --
 //syncronus vs aysyncronus code
 // syncrounus code - line by line not a problem, when waiting
@@ -145,3 +178,34 @@ fetch(BASE_API_URL)
     .catch(error =>{
         feedbackListEL.textContent = `failed to fetch items: ${error.message}`;
     });
+
+// HASHTAG LIST COMPONENT
+
+const clickHandler2 = event => {
+    //get clicked element
+    const clickedEL = event.target;
+
+    //stop function if click happends in list but outside buttons
+    if(clickedEL.className === 'hashtags') return;
+
+    //extract company name
+    const companyNameFromHashtag = clickedEL.textContent.substring(1).toLowerCase().trim();
+
+    //iterate over each feedback item in list
+    feedbackListEL.childNodes.forEach(childnode =>{
+        //stop iteration if text node
+        if(childnode.nodeType === 3) return;
+
+        //extract company name
+        const companyNameFromFeedbackItem = childnode.querySelector('.feedback__company').textContent.toLowerCase().trim();
+
+        //remove feed back items where company name not eqaul
+        if(companyNameFromHashtag !== companyNameFromFeedbackItem){
+            childnode.remove();
+        }
+    });
+
+}
+
+hashtagListEL.addEventListener('click', clickHandler2)
+
